@@ -3,8 +3,9 @@ Version: 0.1-0
 Title: Read and write PNG images
 Author: Simon Urbanek <Simon.Urbanek@r-project.org>
 Maintainer: Simon Urbanek <Simon.Urbanek@r-project.org>
-Depends: R (>= 2.0.0)
+Depends: R (>= 2.9.0)
+Suggests: R (>= 2.11.0)
 Description: This package provides an easy way to read, write and display bitmap images stored in the PNG format.
-License: GPL version 2
+License: GPL version 2 or 3
 SystemRequirements: libpng
 URL: http://www.rforge.net/png/
