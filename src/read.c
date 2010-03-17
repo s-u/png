@@ -52,7 +52,7 @@ SEXP read_png(SEXP sFn) {
     png_infop info_ptr;
     
     if (TYPEOF(sFn) == RAWSXP) {
-	rj.data = RAW(sFn);
+	rj.data = (char*) RAW(sFn);
 	rj.len = LENGTH(sFn);
 	rj.ptr = 0;
 	rj.f = f = 0;
@@ -61,7 +61,7 @@ SEXP read_png(SEXP sFn) {
 	fn = CHAR(STRING_ELT(sFn, 0));
 	f = fopen(fn, "rb");
 	if (!f) Rf_error("unable to open %s", fn);
-	if (fread(header, 1, 8, f) < 1 || png_sig_cmp(header, 0, 8)) {
+	if (fread(header, 1, 8, f) < 1 || png_sig_cmp((png_bytep) header, 0, 8)) {
 	    fclose(f);
 	    Rf_error("file is not in PNG format");
 	}
@@ -109,7 +109,7 @@ SEXP read_png(SEXP sFn) {
 	}
 
 	{
-	    int n = rowbytes * height, i, x, y, p, pln = rowbytes / width, pls = width * height;
+	    int x, y, p, pln = rowbytes / width, pls = width * height;
 	    double * data;
 	    res = PROTECT(allocVector(REALSXP, rowbytes * height));
 	    data = REAL(res);

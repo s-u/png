@@ -42,7 +42,7 @@ static void user_write_data(png_structp png_ptr, png_bytep data, png_size_t leng
 	    SETCDR(rj->rvtail, CONS(rv, R_NilValue));
 	    rj->rvtail = CDR(rj->rvtail);
 	    rj->len = LENGTH(rv);
-	    rj->data = RAW(rv);
+	    rj->data = (char*) RAW(rv);
 	    rj->ptr = 0;
 	    to_write = length;
 	}
@@ -89,7 +89,7 @@ SEXP write_png(SEXP image, SEXP sFn) {
     if (TYPEOF(sFn) == RAWSXP) {
 	SEXP rv = allocVector(RAWSXP, INIT_SIZE);
 	rj.rvtail = rj.rvlist = PROTECT(CONS(rv, R_NilValue));
-	rj.data = RAW(rv);
+	rj.data = (char*) RAW(rv);
 	rj.len = LENGTH(rv);
 	rj.ptr = 0;
 	rj.rvlen = 0;
@@ -136,7 +136,7 @@ SEXP write_png(SEXP image, SEXP sFn) {
 	    row_pointers[i] = flat_rows + (i * width * planes);
 	
 	{
-	    int n = rowbytes * height, i, x, y, p, pln = rowbytes / width, pls = width * height;
+	    int x, y, p, pln = rowbytes / width, pls = width * height;
 	    double * data;
 	    data = REAL(image);
 	    for(y = 0; y < height; y++)
@@ -165,7 +165,7 @@ SEXP write_png(SEXP image, SEXP sFn) {
     res = allocVector(RAWSXP, rj.rvlen);
     {
 	int to_go = rj.rvlen;
-	char *data = RAW(res);
+	unsigned char *data = RAW(res);
 	while (to_go && rj.rvlist != R_NilValue) {
 	    SEXP ve = CAR(rj.rvlist);
 	    int this_len = (to_go > LENGTH(ve)) ? LENGTH(ve) : to_go;
