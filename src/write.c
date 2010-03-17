@@ -128,10 +128,12 @@ SEXP write_png(SEXP image, SEXP sFn) {
     {
 	int rowbytes = width * planes, i;
 	png_bytepp row_pointers;
+	png_bytep  flat_rows;
 	
 	row_pointers = (png_bytepp) R_alloc(height, sizeof(png_bytep));
+	flat_rows = (png_bytep) R_alloc(height, width * planes);
 	for(i = 0; i < height; i++)
-	    row_pointers[i] = (png_bytep) R_alloc(width, planes);
+	    row_pointers[i] = flat_rows + (i * width * planes);
 	
 	{
 	    int n = rowbytes * height, i, x, y, p, pln = rowbytes / width, pls = width * height;

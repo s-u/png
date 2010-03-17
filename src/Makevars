@@ -1,1 +1,2 @@
-PKG_LIBS=-lpng -lz
+PKG_LIBS=$(PNG_LIBS) $(shell libpng-config --static --ldflags)
+PKG_CFLAGS=$(PNG_CFLAGS) $(shell libpng-config --cflags)
