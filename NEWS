@@ -1,0 +1,16 @@
+NEWS/Changelog
+
+0.1-1	(under development)
+    o	add tolerance to writePNG() to avoid shifts by one in
+	color because of numerical representation of discretized
+	values
+
+
+0.1-0	2010-03-17
+    o	first release on CRAN, supports readPNG() and writePNG()
+	for files and raw vectors. readPNG() supports any input
+	color type but will convert to 1-4 planes with 8-bit
+	accuracy each. writePNG() will write out 1-4 planes
+	8-bit each. writePNG() has currenty no provision for
+	generating or stroring a palette.
+

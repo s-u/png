@@ -145,7 +145,7 @@ SEXP write_png(SEXP image, SEXP sFn) {
 			double v = data[y + x * height + p * pls];
 			if (v < 0) v = 0;
 			if (v > 255.0) v = 1.0;
-			row_pointers[y][x * pln + p] = (unsigned char)(v * 255.0);
+			row_pointers[y][x * pln + p] = (unsigned char)(v * 255.0 + 0.5);
 		    }
 	}
 
