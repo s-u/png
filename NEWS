@@ -5,6 +5,9 @@ NEWS/Changelog
 	color because of numerical representation of discretized
 	values
 
+    o	adapt to a last-minute change in R 2.11.0 from raster() to
+	rasterImage()
+
 
 0.1-0	2010-03-17
     o	first release on CRAN, supports readPNG() and writePNG()

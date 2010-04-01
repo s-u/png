@@ -30,15 +30,15 @@ Most common files decompress into RGB (3 channels) or RGBA (4 channels).
 %}
 
 \seealso{
-\code{link{raster}}
+\code{\link{rasterImage}}
 }
 \examples{
 # read a sample file (R logo)
-img <- readPNG(system.file("img","Rlogo.png",package="png"))
+img <- readPNG(system.file("img", "Rlogo.png", package="png"))
 # if your R supports it, we'll plot it
-if (exists("raster")) { # can plot only in R 2.11.0 and higher
-  plot(1:2,type='n',)
-  raster(img,1.2,1.27,1.8,1.73)
+if (exists("rasterImage")) { # can plot only in R 2.11.0 and higher
+  plot(1:2, type='n')
+  rasterImage(img, 1.2, 1.27, 1.8, 1.73)
 }
 }
 \keyword{IO}
