@@ -2,6 +2,8 @@
 #include <png.h>
 
 #include <Rinternals.h>
+/* for R_RED, ..., R_ALPHA */
+#include <R_ext/GraphicsEngine.h>
 
 typedef struct write_job {
     FILE *f;
@@ -62,16 +64,21 @@ static void free_fn(png_structp png_ptr, png_voidp ptr) {
 }
 #endif
 
+#define RX_swap32(X) (X) = (((unsigned int)X) >> 24) | ((((unsigned int)X) >> 8) & 0xff00) | (((unsigned int)X) << 24) | ((((unsigned int)X) & 0xff00) << 8)
+
 SEXP write_png(SEXP image, SEXP sFn) {
     SEXP res = R_NilValue, dims;
     const char *fn;
-    int planes = 1, width, height;
+    int planes = 1, width, height, native = 0;
     FILE *f;
     write_job_t rj;
     png_structp png_ptr;
     png_infop info_ptr;
     
-    if (TYPEOF(image) != REALSXP)
+    if (inherits(image, "nativeRaster") && TYPEOF(image) == INTSXP)
+	native = 1;
+    
+    if (!native && TYPEOF(image) != REALSXP)
 	Rf_error("image must be a matrix or array of real numbers");
     
     dims = Rf_getAttrib(image, R_DimSymbol);
@@ -82,6 +89,19 @@ SEXP write_png(SEXP image, SEXP sFn) {
 	planes = INTEGER(dims)[2];
     if (planes < 1 || planes > 4)
 	Rf_error("image must have either 1 (grayscale), 2 (GA), 3 (RGB) or 4 (RGBA) planes");
+
+    if (native && planes > 1)
+	Rf_error("native raster must be a matrix");
+
+    if (native) { /* nativeRaster should have a "channels" attribute if it has anything else than 4 channels */
+	SEXP cha = getAttrib(image, install("channels"));
+	if (cha != R_NilValue) {
+	    planes = asInteger(cha);
+	    if (planes < 1 || planes > 4)
+		planes = 4;
+	} else
+	    planes = 4;
+    }
 
     width = INTEGER(dims)[1];
     height = INTEGER(dims)[0];
@@ -135,18 +155,62 @@ SEXP write_png(SEXP image, SEXP sFn) {
 	for(i = 0; i < height; i++)
 	    row_pointers[i] = flat_rows + (i * width * planes);
 	
-	{
-	    int x, y, p, pln = rowbytes / width, pls = width * height;
-	    double * data;
-	    data = REAL(image);
+	if (!native) {
+	    int x, y, p, pls = width * height;
+	    double *data = REAL(image);
 	    for(y = 0; y < height; y++)
 		for (x = 0; x < width; x++)
-		    for (p = 0; p < pln; p++) {
+		    for (p = 0; p < planes; p++) {
 			double v = data[y + x * height + p * pls];
 			if (v < 0) v = 0;
 			if (v > 255.0) v = 1.0;
-			row_pointers[y][x * pln + p] = (unsigned char)(v * 255.0 + 0.5);
+			row_pointers[y][x * planes + p] = (unsigned char)(v * 255.0 + 0.5);
 		    }
+	} else {
+	    if (planes == 4) { /* 4 planes - efficient - just copy it all */
+		int y, *idata = INTEGER(image), need_swap = 0;
+		for (y = 0; y < height; idata += width, y++)
+		    memcpy(row_pointers[y], idata, width * sizeof(int));
+		
+		/* on little-endian machines it's all well, but on big-endian ones we'll have to swap */
+#if ! defined (__BIG_ENDIAN__) && ! defined (__LITTLE_ENDIAN__)   /* old compiler so have to use run-time check */
+		{
+		    char bo[4] = { 1, 0, 0, 0 };
+		    if (((int*)bo)[0] != 1)
+			need_swap = 1;
+		}
+#endif
+#ifdef __BIG_ENDIAN__
+		need_swap = 1;
+#endif
+		if (need_swap) {
+		    int *ide = idata;
+		    idata = INTEGER(image);
+		    for (; idata < ide; idata++)
+			RX_swap32(*idata);
+		}
+	    } else if (planes == 3) { /* RGB */
+		int x, y, *idata = INTEGER(res);
+		for (y = 0; y < height; y++)
+		    for (x = 0; x < rowbytes; idata++) {
+			row_pointers[y][x++] = R_RED(*idata);
+			row_pointers[y][x++] = R_GREEN(*idata);
+			row_pointers[y][x++] = R_BLUE(*idata);
+		    }
+	    } else if (planes == 2) { /* GA */
+		int x, y, *idata = INTEGER(res);
+		for (y = 0; y < height; y++)
+		    for (x = 0; x < rowbytes; idata++) {
+			row_pointers[y][x++] = R_RED(*idata);
+			row_pointers[y][x++] = R_ALPHA(*idata);
+		    }
+	    } else { /* gray */
+		int x, y, *idata = INTEGER(res);
+		for (y = 0; y < height; y++)
+		    for (x = 0; x < rowbytes; x++)
+			for (x = 0; x < rowbytes; idata++)
+			    row_pointers[y][x++] = R_RED(*idata);
+	    }
 	}
 
     	png_set_rows(png_ptr, info_ptr, row_pointers);

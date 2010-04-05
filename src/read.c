@@ -2,6 +2,8 @@
 #include <png.h>
 
 #include <Rinternals.h>
+/* for R_RGB / R_RGBA */
+#include <R_ext/GraphicsEngine.h>
 
 typedef struct read_job {
     FILE *f;
@@ -42,10 +44,13 @@ static void free_fn(png_structp png_ptr, png_voidp ptr) {
 }
 #endif
 
-SEXP read_png(SEXP sFn) {
+#define RX_swap32(X) (X) = (((unsigned int)X) >> 24) | ((((unsigned int)X) >> 8) & 0xff00) | (((unsigned int)X) << 24) | ((((unsigned int)X) & 0xff00) << 8)
+
+SEXP read_png(SEXP sFn, SEXP sNative) {
     SEXP res = R_NilValue;
     const char *fn;
     char header[8];
+    int native = asInteger(sNative);
     FILE *f;
     read_job_t rj;
     png_structp png_ptr;
@@ -102,13 +107,76 @@ SEXP read_png(SEXP sFn) {
 		color_type, interlace_type, compression_type, filter_method);
 #endif
 	
+	
+	
 	png_bytepp row_pointers = png_get_rows(png_ptr, info_ptr);
 	if (f) {
 	    rj.f = 0;
 	    fclose(f);
 	}
 
-	{
+	/* native output - vector of integers */
+	if (native) {
+	    int pln = rowbytes / width;
+	    if (pln < 1 || pln > 4) {
+		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+		Rf_error("native output for %d planes is not possible.", pln);
+	    }
+
+	    res = PROTECT(allocVector(INTSXP, width * height));
+	    if (pln == 4) { /* 4 planes - efficient - just copy it all */
+		int y, *idata = INTEGER(res), need_swap = 0;
+		for (y = 0; y < height; idata += width, y++)
+		    memcpy(idata, row_pointers[y], width * sizeof(int));
+
+		/* on little-endian machines it's all well, but on big-endian ones we'll have to swap */
+#if ! defined (__BIG_ENDIAN__) && ! defined (__LITTLE_ENDIAN__)   /* old compiler so have to use run-time check */
+		{
+		    char bo[4] = { 1, 0, 0, 0 };
+		    if (((int*)bo)[0] != 1)
+			need_swap = 1;
+		}
+#endif
+#ifdef __BIG_ENDIAN__
+		need_swap = 1;
+#endif
+		if (need_swap) {
+		    int *ide = idata;
+		    idata = INTEGER(res);
+		    for (; idata < ide; idata++)
+			RX_swap32(*idata);
+		}
+	    } else if (pln == 3) { /* RGB */
+		int x, y, *idata = INTEGER(res);
+		for (y = 0; y < height; y++)
+		    for (x = 0; x < rowbytes; x += 3)
+			*(idata++) = R_RGB((unsigned int) row_pointers[y][x],
+					   (unsigned int) row_pointers[y][x + 1],
+					   (unsigned int) row_pointers[y][x + 2]);
+	    } else if (pln == 2) { /* GA */
+		int x, y, *idata = INTEGER(res);
+		for (y = 0; y < height; y++)
+		    for (x = 0; x < rowbytes; x += 2)
+			*(idata++) = R_RGBA((unsigned int) row_pointers[y][x],
+					    (unsigned int) row_pointers[y][x],
+					    (unsigned int) row_pointers[y][x],
+					    (unsigned int) row_pointers[y][x + 1]);
+	    } else { /* gray */
+		int x, y, *idata = INTEGER(res);
+		for (y = 0; y < height; y++)
+		    for (x = 0; x < rowbytes; x++)
+			*(idata++) = R_RGB((unsigned int) row_pointers[y][x],
+					   (unsigned int) row_pointers[y][x],
+					   (unsigned int) row_pointers[y][x]);
+	    }
+	    dim = allocVector(INTSXP, 2);
+	    INTEGER(dim)[0] = height;
+	    INTEGER(dim)[1] = width;
+	    setAttrib(res, R_DimSymbol, dim);
+	    setAttrib(res, R_ClassSymbol, mkString("nativeRaster"));
+	    setAttrib(res, install("channels"), ScalarInteger(pln));
+	    UNPROTECT(1);
+	} else {
 	    int x, y, p, pln = rowbytes / width, pls = width * height;
 	    double * data;
 	    res = PROTECT(allocVector(REALSXP, rowbytes * height));

@@ -45,5 +45,10 @@ r <- writePNG(img, raw())
 img2 <- readPNG(r)
 # it better be the same
 identical(img, img2)
+# try to write a native raster
+img3 <- readPNG(system.file("img","Rlogo.png",package="png"), TRUE)
+r2 <- writePNG(img3, raw())
+img4 <- readPNG(r2, TRUE)
+identical(img3, img4)
 }
 \keyword{IO}
