@@ -1,5 +1,7 @@
 NEWS/Changelog
 
+0.1-2	(under development)
+
 0.1-1	2010-04-06
     o	add tolerance to writePNG() to avoid shifts by one in
 	color because of numerical representation of discretized
@@ -8,7 +10,7 @@ NEWS/Changelog
     o	adapt to a last-minute change in R 2.11.0 from raster() to
 	rasterImage()
 
-    o	add support for more effieint nativeRaster format
+    o	add support for more efficient nativeRaster format
 
 
 0.1-0	2010-03-17
