@@ -7,7 +7,7 @@ Read a bitmap image stored in the PNG format
 Reads an image from a PNG file/content into a raster array.
 }
 \usage{
-readPNG(source)
+readPNG(source, native = FALSE)
 }
 \arguments{
   \item{source}{Either name of the file to read from or a raw vector
@@ -16,8 +16,8 @@ readPNG(source)
   (the default) then the result is an array, if \code{TRUE} then the
   result is a native raster representation.}
 }
-\details{
-}
+%\details{
+%}
 \value{
 If \code{native} is \code{FALSE} then an array of the dimensions height
 x width x channels. If there is only one channel the result is a
