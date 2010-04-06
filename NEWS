@@ -1,6 +1,6 @@
 NEWS/Changelog
 
-0.1-1	(under development)
+0.1-1	2010-04-06
     o	add tolerance to writePNG() to avoid shifts by one in
 	color because of numerical representation of discretized
 	values
