@@ -15,16 +15,36 @@ writePNG(image, target)
   clipped. The object must be either two-dimensional (grayscale
   matrix) or three dimensional array (third dimension specifying the
   plane) and must have either one (grayscale), two (grayscale +
-  alpha), three (RGB) or four (RGB + alpha) planes.}
+  alpha), three (RGB) or four (RGB + alpha) planes. (For alternative
+  image specifications see deatils)}
   \item{target}{Either name of the file to write to or a raw vector
   (\code{raw()} is good enough) indicating that the output should be a
   raw vector.}
 }
-%\details{
-%}
 \value{
 Either NULL if the target is a file or a raw vector containing the
 compressed PNG image if the target was a raw vector.
+}
+\details{
+  \code{writePNG} takes an image as input and compresses it into PNG
+  format. The image input is usually a matrix (for grayscale images -
+  dimensions are width, height) or an array (for color and alpha
+  images - dimensions are width, height, planes) of reals. The planes
+  are interpreted in the sequence red, green, blue, alpha.
+
+  Alternative representation of an image is of \code{nativeRaster} class
+  which is an integer matrix with each entry representing one pixel in
+  binary encoded RGBA format (as used internally by R). It can be
+  obtained from \code{\link{readPNG}} using \code{native = TRUE}.
+
+  Finally, \code{writePNG} also supports raw array containing the RGBA
+  image as bytes. The dimensions of the raw array have to be planes,
+  width, height (because the storage is interleaved). Currently only 4
+  planes (RGBA) are supported and the processing is equivalent to that
+  of a native raster.
+
+  The result is either stored in a file (if \code{target} is a file
+  name) or in a raw vector (if \code{target} is a raw vector).
 }
 %\references{
 %}
@@ -32,7 +52,6 @@ compressed PNG image if the target was a raw vector.
 %}
 %\note{
 %}
-
 \seealso{
 \code{link{readPNG}}
 }
