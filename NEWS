@@ -1,6 +1,7 @@
 NEWS/Changelog
 
 0.1-2	(under development)
+    o	support raw array as input to writePNG (RGBA only)
 
 0.1-1	2010-04-06
     o	add tolerance to writePNG() to avoid shifts by one in

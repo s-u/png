@@ -69,7 +69,7 @@ static void free_fn(png_structp png_ptr, png_voidp ptr) {
 SEXP write_png(SEXP image, SEXP sFn) {
     SEXP res = R_NilValue, dims;
     const char *fn;
-    int planes = 1, width, height, native = 0;
+    int planes = 1, width, height, native = 0, raw_array = 0;
     FILE *f;
     write_job_t rj;
     png_structp png_ptr;
@@ -78,15 +78,27 @@ SEXP write_png(SEXP image, SEXP sFn) {
     if (inherits(image, "nativeRaster") && TYPEOF(image) == INTSXP)
 	native = 1;
     
-    if (!native && TYPEOF(image) != REALSXP)
-	Rf_error("image must be a matrix or array of real numbers");
+    if (TYPEOF(image) == RAWSXP)
+	raw_array = 1;
+
+    if (!native && !raw_array && TYPEOF(image) != REALSXP)
+	Rf_error("image must be a matrix or array of raw or real numbers");
     
     dims = Rf_getAttrib(image, R_DimSymbol);
     if (dims == R_NilValue || TYPEOF(dims) != INTSXP || LENGTH(dims) < 2 || LENGTH(dims) > 3)
 	Rf_error("image must be a matrix or an array of two or three dimensions");
 
-    if (LENGTH(dims) == 3)
-	planes = INTEGER(dims)[2];
+    if (raw_array && LENGTH(dims) == 3) { /* raw arrays have either bpp, width, height or width, height dimensions */
+	planes = INTEGER(dims)[0];
+	width = INTEGER(dims)[1];
+	height = INTEGER(dims)[2];
+    } else { /* others have width, height[, bpp] */
+	width = INTEGER(dims)[1];
+	height = INTEGER(dims)[0];
+	if (LENGTH(dims) == 3)
+	    planes = INTEGER(dims)[2];
+    }
+
     if (planes < 1 || planes > 4)
 	Rf_error("image must have either 1 (grayscale), 2 (GA), 3 (RGB) or 4 (RGBA) planes");
 
@@ -102,10 +114,12 @@ SEXP write_png(SEXP image, SEXP sFn) {
 	} else
 	    planes = 4;
     }
+    if (raw_array) {
+	if (planes != 4)
+	    Rf_error("Only RGBA format is supported as raw data");
+	native = 1; /* from now on we treat raw arrays like native */
+    }
 
-    width = INTEGER(dims)[1];
-    height = INTEGER(dims)[0];
-    
     if (TYPEOF(sFn) == RAWSXP) {
 	SEXP rv = allocVector(RAWSXP, INIT_SIZE);
 	rj.rvtail = rj.rvlist = PROTECT(CONS(rv, R_NilValue));
@@ -168,7 +182,7 @@ SEXP write_png(SEXP image, SEXP sFn) {
 		    }
 	} else {
 	    if (planes == 4) { /* 4 planes - efficient - just copy it all */
-		int y, *idata = INTEGER(image), need_swap = 0;
+	      int y, *idata = raw_array ? ((int*) RAW(image)) : INTEGER(image), need_swap = 0;
 		for (y = 0; y < height; idata += width, y++)
 		    memcpy(row_pointers[y], idata, width * sizeof(int));
 		
@@ -185,7 +199,6 @@ SEXP write_png(SEXP image, SEXP sFn) {
 #endif
 		if (need_swap) {
 		    int *ide = idata;
-		    idata = INTEGER(image);
 		    for (; idata < ide; idata++)
 			RX_swap32(*idata);
 		}
@@ -207,9 +220,8 @@ SEXP write_png(SEXP image, SEXP sFn) {
 	    } else { /* gray */
 		int x, y, *idata = INTEGER(res);
 		for (y = 0; y < height; y++)
-		    for (x = 0; x < rowbytes; x++)
-			for (x = 0; x < rowbytes; idata++)
-			    row_pointers[y][x++] = R_RED(*idata);
+		  for (x = 0; x < rowbytes; idata++)
+		    row_pointers[y][x++] = R_RED(*idata);
 	    }
 	}
 
