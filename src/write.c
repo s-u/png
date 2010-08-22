@@ -190,7 +190,9 @@ SEXP write_png(SEXP image, SEXP sFn) {
 #if ! defined (__BIG_ENDIAN__) && ! defined (__LITTLE_ENDIAN__)   /* old compiler so have to use run-time check */
 		{
 		    char bo[4] = { 1, 0, 0, 0 };
-		    if (((int*)bo)[0] != 1)
+		    int bi;
+		    memcpy(&bi, bo, 4);
+		    if (bi != 1)
 			need_swap = 1;
 		}
 #endif
