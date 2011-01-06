@@ -5,6 +5,8 @@
 /* for R_RGB / R_RGBA */
 #include <R_ext/GraphicsEngine.h>
 
+#define VERBOSE_INFO 1
+
 typedef struct read_job {
     FILE *f;
     int ptr, len;
@@ -93,23 +95,94 @@ SEXP read_png(SEXP sFn, SEXP sNative) {
     } else
 	png_set_read_fn(png_ptr, (voidp) &rj, user_read_data);
 
-    png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_EXPAND, NULL);
+    /* png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_EXPAND, NULL); */
+    png_read_info(png_ptr, info_ptr);
     {
 	png_uint_32 width, height;
+	png_bytepp row_pointers;
+	char *img_memory;
 	SEXP dim;
 	int bit_depth, color_type, interlace_type, compression_type, filter_method, rowbytes;
+	int need_swap = 0;
 	png_get_IHDR(png_ptr, info_ptr, &width, &height,
 		     &bit_depth, &color_type, &interlace_type,
 		     &compression_type, &filter_method);
 	rowbytes = png_get_rowbytes(png_ptr, info_ptr);
-#if 0
-	Rprintf("%d x %d [%d], %d bytes, 0x%x, %d, %d\n", (int) width, (int) height, bit_depth, rowbytes,
+#if VERBOSE_INFO
+	Rprintf("png: %d x %d [%d], %d bytes, 0x%x, %d, %d\n", (int) width, (int) height, bit_depth, rowbytes,
 		color_type, interlace_type, compression_type, filter_method);
 #endif
+
+	/* on little-endian machines it's all well, but on big-endian ones we'll have to swap */
+#if ! defined (__BIG_ENDIAN__) && ! defined (__LITTLE_ENDIAN__)   /* old compiler so have to use run-time check */
+	{
+	    char bo[4] = { 1, 0, 0, 0 };
+	    int bi;
+	    memcpy(&bi, bo, 4);
+	    if (bi != 1)
+		need_swap = 1;
+	}
+#endif
+#ifdef __BIG_ENDIAN__
+	need_swap = 1;
+#endif
+
+	/*==== set any transforms that we desire: ====*/
+	/* palette->RGB - no discussion there */
+	if (color_type == PNG_COLOR_TYPE_PALETTE)
+	    png_set_palette_to_rgb(png_ptr);
+	/* expand gray scale to 8 bits */
+	if (color_type == PNG_COLOR_TYPE_GRAY &&
+	    bit_depth < 8) png_set_expand_gray_1_2_4_to_8(png_ptr);
+	/* this should not be necessary but it's in the docs to guarantee 8-bit */
+	if (bit_depth < 8)
+	    png_set_packing(png_ptr);
+	/* convert tRNS chunk into alpha */
+	if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
+	    png_set_tRNS_to_alpha(png_ptr);
+	/* native format doesn't allow for 16-bit so it needs to be truncated */
+	if (bit_depth == 16 && native) {
+	    Rf_warning("Image uses 16-bit channels but R native format only supports 8-bit, truncating LSB."); 
+	    png_set_strip_16(png_ptr);
+	}
+	/* for native output we need to a) convert gray to RGB, b) add alpha */
+	if (native) {
+	    if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+		png_set_gray_to_rgb(png_ptr);
+	    if (!(color_type & PNG_COLOR_MASK_ALPHA)) /* if there is no alpha, add it */
+		png_set_add_alpha(png_ptr, 0xFF, PNG_FILLER_AFTER);
+	}
+#if 0 /* we use native (network) endianness since we read each byte anyway */
+	/* on little-endian machines we need to swap 16-bit values - this is the inverse of need_swap as used for R! */
+	if (!need_swap && bit_depth == 16)
+	    png_set_swap(png_ptr);
+#endif
+
+	/* all transformations are in place, so it's time to update the info structure so we can allocate stuff */
+	png_read_update_info(png_ptr, info_ptr);
+
+	/* re-read some important bits from the updated structure */
+	rowbytes = png_get_rowbytes(png_ptr, info_ptr);
+	bit_depth = png_get_bit_depth(png_ptr, info_ptr);
+	color_type = png_get_color_type(png_ptr, info_ptr);
+
+#if VERBOSE_INFO
+	Rprintf("   -filter-> %d-bits, %d bytes, 0x%x\n", bit_depth, rowbytes, color_type);
+#endif
+
+	/* allocate data fro row pointers and the image using R's allocation */
+	row_pointers = (png_bytepp) R_alloc(height, sizeof(png_bytep));
+	img_memory = R_alloc(height, rowbytes);
+	{ /* populate the row pointers */
+	    char *i_ptr = img_memory;
+	    int i;
+	    for (i = 0; i < height; i++, i_ptr += rowbytes)
+	      row_pointers[i] = (png_bytep) i_ptr;
+	}
 	
+	/* do the reading work */
+	png_read_image(png_ptr, row_pointers);
 	
-	
-	png_bytepp row_pointers = png_get_rows(png_ptr, info_ptr);
 	if (f) {
 	    rj.f = 0;
 	    fclose(f);
@@ -125,23 +198,10 @@ SEXP read_png(SEXP sFn, SEXP sNative) {
 
 	    res = PROTECT(allocVector(INTSXP, width * height));
 	    if (pln == 4) { /* 4 planes - efficient - just copy it all */
-		int y, *idata = INTEGER(res), need_swap = 0;
+		int y, *idata = INTEGER(res);
 		for (y = 0; y < height; idata += width, y++)
 		    memcpy(idata, row_pointers[y], width * sizeof(int));
 
-		/* on little-endian machines it's all well, but on big-endian ones we'll have to swap */
-#if ! defined (__BIG_ENDIAN__) && ! defined (__LITTLE_ENDIAN__)   /* old compiler so have to use run-time check */
-		{
-		    char bo[4] = { 1, 0, 0, 0 };
-		    int bi;
-		    memcpy(&bi, bo, 4);
-		    if (bi != 1)
-			need_swap = 1;
-		}
-#endif
-#ifdef __BIG_ENDIAN__
-		need_swap = 1;
-#endif
 		if (need_swap) {
 		    int *ide = idata;
 		    idata = INTEGER(res);
@@ -181,12 +241,26 @@ SEXP read_png(SEXP sFn, SEXP sNative) {
 	} else {
 	    int x, y, p, pln = rowbytes / width, pls = width * height;
 	    double * data;
-	    res = PROTECT(allocVector(REALSXP, rowbytes * height));
+	    if (bit_depth == 16) {
+		res = PROTECT(allocVector(REALSXP, (rowbytes * height) / 2));
+		pln /= 2;
+	    } else
+		res = PROTECT(allocVector(REALSXP, rowbytes * height));
+
 	    data = REAL(res);
-	    for(y = 0; y < height; y++)
-		for (x = 0; x < width; x++)
-		    for (p = 0; p < pln; p++)
-			data[y + x * height + p * pls] = ((double)row_pointers[y][x * pln + p]) / 255.0;
+	    if (bit_depth == 16)
+		for(y = 0; y < height; y++)
+		    for (x = 0; x < width; x++)
+			for (p = 0; p < pln; p++)
+			    data[y + x * height + p * pls] = ((double)(
+								       (((unsigned int)(((unsigned char *)row_pointers[y])[2 * (x * pln + p)])) << 8) |
+								        ((unsigned int)(((unsigned char *)row_pointers[y])[2 * (x * pln + p) + 1]))
+								       )) / 65535.0;
+	    else 
+		for(y = 0; y < height; y++)
+		    for (x = 0; x < width; x++)
+			for (p = 0; p < pln; p++)
+			    data[y + x * height + p * pls] = ((double)row_pointers[y][x * pln + p]) / 255.0;
 	    dim = allocVector(INTSXP, (pln > 1) ? 3 : 2);
 	    INTEGER(dim)[0] = height;
 	    INTEGER(dim)[1] = width;

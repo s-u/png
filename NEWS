@@ -3,6 +3,9 @@ NEWS/Changelog
 0.1-2	(under development)
     o	support raw array as input to writePNG (RGBA only)
 
+    o	do not truncate 16-bit images in readPNG() if the resulting
+	output is not nativeRaster
+
 0.1-1	2010-04-06
     o	add tolerance to writePNG() to avoid shifts by one in
 	color because of numerical representation of discretized

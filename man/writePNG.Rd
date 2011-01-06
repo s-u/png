@@ -50,8 +50,14 @@ compressed PNG image if the target was a raw vector.
 %}
 %\author{
 %}
-%\note{
-%}
+\note{
+  Currently \code{writePNG} only produces 8-bit, deflate-compressed,
+  non-quantized, non-interlaced images. Note in particular that
+  \code{\link{readPNG}} can read 16-bit channels but storing them
+  back using \code{writePNG} will strip the 8 LSB (irrelevant for
+  display purposes but possibly relevant for use of PNG in
+  signal-processing if the input is truly 16-bit wide).
+}
 \seealso{
 \code{link{readPNG}}
 }

@@ -26,7 +26,17 @@ matrix. The values are reals between 0 and 1. If \code{native} is
 returned instead. The latter cannot be easily computed on but is the
 most efficient way to draw using \code{rasterImage}.
 
-Most common files decompress into RGB (3 channels) or RGBA (4 channels).
+Most common files decompress into RGB (3 channels), RGBA (4 channels),
+Grayscale (1 channel) or GA (2 channels). Note that G and GA images
+cannot be directly used in \code{\link{rasterImage}} unless
+\code{native} is set to \code{TRUE} because \code{rasterImage} requires
+RGB or RGBA format (\code{nativeRaster} is always 8-bit RGBA).
+
+As of png 0.1-2 files with 16-bit channels are converted in full
+resolution to the array format, but the \code{nativeRaster} format only
+supports 8-bit and therefore a truncation is performed (eight least
+significant bits are dropped) with a warning if \code{native} is
+\code{TRUE}.
 }
 %\references{
 %}
