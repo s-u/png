@@ -59,7 +59,7 @@ compressed PNG image if the target was a raw vector.
   signal-processing if the input is truly 16-bit wide).
 }
 \seealso{
-\code{link{readPNG}}
+\code{\link{readPNG}}
 }
 \examples{
 # read a sample file (R logo)

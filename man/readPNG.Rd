@@ -46,7 +46,7 @@ significant bits are dropped) with a warning if \code{native} is
 %}
 
 \seealso{
-\code{\link{rasterImage}}
+\code{\link{rasterImage}}, \code{\link{writePNG}}
 }
 \examples{
 # read a sample file (R logo)
