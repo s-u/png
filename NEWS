@@ -1,10 +1,13 @@
 NEWS/Changelog
 
-0.1-2	(under development)
+0.1-2	2011-01-19
     o	support raw array as input to writePNG (RGBA only)
 
     o	do not truncate 16-bit images in readPNG() if the resulting
 	output is not nativeRaster
+
+    o	Windows binary on RForge has been updated to libpng 1.5.0
+
 
 0.1-1	2010-04-06
     o	add tolerance to writePNG() to avoid shifts by one in
