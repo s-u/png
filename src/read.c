@@ -93,7 +93,7 @@ SEXP read_png(SEXP sFn, SEXP sNative) {
 	png_init_io(png_ptr, f);
 	png_set_sig_bytes(png_ptr, 8);
     } else
-	png_set_read_fn(png_ptr, (voidp) &rj, user_read_data);
+	png_set_read_fn(png_ptr, (png_voidp) &rj, user_read_data);
 
     /* png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_EXPAND, NULL); */
     png_read_info(png_ptr, info_ptr);

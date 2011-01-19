@@ -153,7 +153,7 @@ SEXP write_png(SEXP image, SEXP sFn) {
     if (f)
 	png_init_io(png_ptr, f);
     else
-	png_set_write_fn(png_ptr, (voidp) &rj, user_write_data, user_flush_data);
+	png_set_write_fn(png_ptr, (png_voidp) &rj, user_write_data, user_flush_data);
 
     png_set_IHDR(png_ptr, info_ptr, width, height, 8,
 		 (planes == 1) ? PNG_COLOR_TYPE_GRAY : ((planes == 2) ? PNG_COLOR_TYPE_GRAY_ALPHA : ((planes == 3) ? PNG_COLOR_TYPE_RGB : PNG_COLOR_TYPE_RGB_ALPHA)),
