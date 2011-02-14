@@ -1,5 +1,15 @@
 NEWS/Changelog
 
+0.1-3	(under development)
+    o	remove debugging output
+
+    o	added a missing call to png_set_interlace_handling to allow
+	libpng to de-interlace images
+
+    o	prevent warnings in readPNG() example for the windows device
+	which is incapable of any transparency
+
+
 0.1-2	2011-01-19
     o	support raw array as input to writePNG (RGBA only)
 

@@ -5,8 +5,6 @@
 /* for R_RGB / R_RGBA */
 #include <R_ext/GraphicsEngine.h>
 
-#define VERBOSE_INFO 1
-
 typedef struct read_job {
     FILE *f;
     int ptr, len;
@@ -157,6 +155,9 @@ SEXP read_png(SEXP sFn, SEXP sNative) {
 	if (!need_swap && bit_depth == 16)
 	    png_set_swap(png_ptr);
 #endif
+
+	/* PNG wants up to call png_set_interlace_handling so it can get ready to de-interlace images */
+	png_set_interlace_handling(png_ptr);
 
 	/* all transformations are in place, so it's time to update the info structure so we can allocate stuff */
 	png_read_update_info(png_ptr, info_ptr);
