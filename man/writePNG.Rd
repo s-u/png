@@ -7,19 +7,19 @@ Write a bitmap image in PNG format
 Create a PNG image from an array or matrix.
 }
 \usage{
-writePNG(image, target)
+writePNG(image, target = raw())
 }
 \arguments{
   \item{image}{image represented by a real matrix or array with values
-  in the range of 0 to 1. Values outside this range will be
-  clipped. The object must be either two-dimensional (grayscale
-  matrix) or three dimensional array (third dimension specifying the
-  plane) and must have either one (grayscale), two (grayscale +
-  alpha), three (RGB) or four (RGB + alpha) planes. (For alternative
-  image specifications see deatils)}
-  \item{target}{Either name of the file to write to or a raw vector
-  (\code{raw()} is good enough) indicating that the output should be a
-  raw vector.}
+    in the range of 0 to 1. Values outside this range will be
+    clipped. The object must be either two-dimensional (grayscale
+    matrix) or three dimensional array (third dimension specifying the
+    plane) and must have either one (grayscale), two (grayscale +
+    alpha), three (RGB) or four (RGB + alpha) planes. (For alternative
+    image specifications see deatils)}
+  \item{target}{Either name of the file to write, a binary connection or
+    a raw vector (\code{raw()} - the default - is good enough)
+    indicating that the output should be a raw vector.}
 }
 \value{
 Either NULL if the target is a file or a raw vector containing the
@@ -44,7 +44,8 @@ compressed PNG image if the target was a raw vector.
   of a native raster.
 
   The result is either stored in a file (if \code{target} is a file
-  name) or in a raw vector (if \code{target} is a raw vector).
+  name), in a raw vector (if \code{target} is a raw vector) or sent to a
+  binary connection.
 }
 %\references{
 %}
@@ -65,14 +66,14 @@ compressed PNG image if the target was a raw vector.
 # read a sample file (R logo)
 img <- readPNG(system.file("img","Rlogo.png",package="png"))
 # write the image into a raw vector
-r <- writePNG(img, raw())
+r <- writePNG(img)
 # read it back again
 img2 <- readPNG(r)
 # it better be the same
 identical(img, img2)
 # try to write a native raster
 img3 <- readPNG(system.file("img","Rlogo.png",package="png"), TRUE)
-r2 <- writePNG(img3, raw())
+r2 <- writePNG(img3)
 img4 <- readPNG(r2, TRUE)
 identical(img3, img4)
 }
