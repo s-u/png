@@ -1,6 +1,6 @@
 NEWS/Changelog
 
-0.1-4	(under development)
+0.1-4	2011-12-10
     o	writePNG() now supports binary connection as target and the
 	default target is now raw()
 
