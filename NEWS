@@ -1,5 +1,12 @@
 NEWS/Changelog
 
+0.1-5	(under development)
+    o	try to detect local libpng via LOCAL_SOFT on Windows.
+	Note that if you use LOCAL_SOFT, you are taking full
+	responsibility over the libraries that png will be linked
+	against.
+
+
 0.1-4	2011-12-10
     o	writePNG() now supports binary connection as target and the
 	default target is now raw()
