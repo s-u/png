@@ -4,6 +4,9 @@ echo "  checking PNG headers and libraries"
 allok=yes
 use_local=no
 
+## In the future we should be able to use
+## local=`${R_HOME}/bin/R CMD config LOCAL_SOFT`
+## but up to at least R 3.0.1 that doesn't work
 if [ -z "$MAKE" ]; then
     MAKE=`${R_HOME}/bin/R CMD config MAKE`
     if [ -z "$MAKE" ]; then
@@ -54,8 +57,9 @@ if [ ${allok} != yes ]; then
     echo ""
     echo " *** ERROR: unable to find PNG files"
     echo ""
-    echo " They must be either in src/win32 or in a tar-ball"
-    echo " src/libpng-current-win.tar.gz"
+    echo " They must be either in src/win32, in a tar-ball"
+    echo " src/libpng-current-win.tar.gz or"
+    echo " available via the LOCAL_SOFT R make setting."
     echo ""
     echo " You can get the latest binary tar ball from"
     echo " http://www.rforge.net/png/files/"

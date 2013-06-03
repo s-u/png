@@ -1,6 +1,13 @@
 NEWS/Changelog
 
-0.1-5	(under development)
+0.1-5	2013-06-03
+    o	add dpi and asp to writePNG() which allows to store the
+	image resolution or aspect ratio (via the sPHYs PNG tag).
+
+    o	add info flag to readPNG() which interprets some optional
+	tags to return additional information such as dpi, asp
+	or gamma if stored.
+
     o	try to detect local libpng via LOCAL_SOFT on Windows.
 	Note that if you use LOCAL_SOFT, you are taking full
 	responsibility over the libraries that png will be linked

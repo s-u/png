@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <png.h>
 
 #include <Rinternals.h>
@@ -46,11 +47,11 @@ static void free_fn(png_structp png_ptr, png_voidp ptr) {
 
 #define RX_swap32(X) (X) = (((unsigned int)X) >> 24) | ((((unsigned int)X) >> 8) & 0xff00) | (((unsigned int)X) << 24) | ((((unsigned int)X) & 0xff00) << 8)
 
-SEXP read_png(SEXP sFn, SEXP sNative) {
-    SEXP res = R_NilValue;
+SEXP read_png(SEXP sFn, SEXP sNative, SEXP sInfo) {
+    SEXP res = R_NilValue, info_list = R_NilValue, info_tail = R_NilValue;
     const char *fn;
     char header[8];
-    int native = asInteger(sNative);
+    int native = asInteger(sNative), info = (asInteger(sInfo) == 1);
     FILE *f;
     read_job_t rj;
     png_structp png_ptr;
@@ -93,6 +94,8 @@ SEXP read_png(SEXP sFn, SEXP sNative) {
     } else
 	png_set_read_fn(png_ptr, (png_voidp) &rj, user_read_data);
 
+#define add_info(K, V) { info_tail = SETCDR(info_tail, CONS(V, R_NilValue)); SET_TAG(info_tail, install(K)); }
+
     /* png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_EXPAND, NULL); */
     png_read_info(png_ptr, info_ptr);
     {
@@ -110,6 +113,39 @@ SEXP read_png(SEXP sFn, SEXP sNative) {
 	Rprintf("png: %d x %d [%d], %d bytes, 0x%x, %d, %d\n", (int) width, (int) height, bit_depth, rowbytes,
 		color_type, interlace_type, compression_type, filter_method);
 #endif
+
+	if (info) {
+	    SEXP dv;
+	    double d;
+	    png_uint_32 rx, ry;
+	    int ut;
+
+	    info_tail = info_list = PROTECT(CONS((dv = allocVector(INTSXP, 2)), R_NilValue));
+	    INTEGER(dv)[0] = (int) width;
+	    INTEGER(dv)[1] = (int) height;
+	    SET_TAG(info_list, install("dim"));
+	    add_info("bit.depth", ScalarInteger(bit_depth));
+	    switch(color_type) {
+	    case PNG_COLOR_TYPE_GRAY: add_info("color.type", mkString("gray")); break;
+	    case PNG_COLOR_TYPE_GRAY_ALPHA: add_info("color.type", mkString("gray + alpha")); break;
+	    case PNG_COLOR_TYPE_PALETTE: add_info("color.type", mkString("palette")); break;
+	    case PNG_COLOR_TYPE_RGB: add_info("color.type", mkString("RGB")); break;
+	    case PNG_COLOR_TYPE_RGB_ALPHA: add_info("color.type", mkString("RGBA")); break;
+	    default: add_info("color.type", ScalarInteger(color_type));
+	    }
+	    if (png_get_gAMA(png_ptr, info_ptr, &d)) add_info("gamma", ScalarReal(d));
+#ifdef PNG_pHYs_SUPPORTED
+	    if (png_get_pHYs(png_ptr, info_ptr, &rx, &ry, &ut)) {
+		if (ut == PNG_RESOLUTION_METER) {
+		    dv = allocVector(REALSXP, 2);
+		    REAL(dv)[0] = ((double)rx) / 39.37008;
+		    REAL(dv)[1] = ((double)ry) / 39.37008;
+		    add_info("dpi", dv);
+		} else if (ut == PNG_RESOLUTION_UNKNOWN)
+		    add_info("asp", ScalarReal(rx / ry));
+	    }
+#endif
+	}
 
 	/* on little-endian machines it's all well, but on big-endian ones we'll have to swap */
 #if ! defined (__BIG_ENDIAN__) && ! defined (__LITTLE_ENDIAN__)   /* old compiler so have to use run-time check */
@@ -270,6 +306,12 @@ SEXP read_png(SEXP sFn, SEXP sNative) {
 	    setAttrib(res, R_DimSymbol, dim);
 	    UNPROTECT(1);
 	}
+    }
+
+    if (info) {
+	PROTECT(res);
+	setAttrib(res, install("info"), info_list);
+	UNPROTECT(2);
     }
     
     png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);

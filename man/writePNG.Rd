@@ -7,7 +7,7 @@ Write a bitmap image in PNG format
 Create a PNG image from an array or matrix.
 }
 \usage{
-writePNG(image, target = raw())
+writePNG(image, target = raw(), dpi = NULL, asp = NULL)
 }
 \arguments{
   \item{image}{image represented by a real matrix or array with values
@@ -20,10 +20,16 @@ writePNG(image, target = raw())
   \item{target}{Either name of the file to write, a binary connection or
     a raw vector (\code{raw()} - the default - is good enough)
     indicating that the output should be a raw vector.}
+  \item{dpi}{optional, if set, must be a numeric vector of length 1 or 2
+    specifying the resolution of the image in DPI (dots per inch) for x
+    and y (in that order) - it is recycled to length 2.}
+  \item{asp}{optional, if set, must be a numeric scalar specifying the
+    aspect ratio (\code{x / y}). \code{dpi} and \code{asp} are mututally
+    exclusive, speciyfing both is an error.}
 }
 \value{
-Either NULL if the target is a file or a raw vector containing the
-compressed PNG image if the target was a raw vector.
+  Either \code{NULL} if the target is a file or a raw vector containing
+  the compressed PNG image if the target was a raw vector.
 }
 \details{
   \code{writePNG} takes an image as input and compresses it into PNG
@@ -46,11 +52,16 @@ compressed PNG image if the target was a raw vector.
   The result is either stored in a file (if \code{target} is a file
   name), in a raw vector (if \code{target} is a raw vector) or sent to a
   binary connection.
+
+  If either \code{dpi} or \code{asp} is set, the \code{sPHy} chunk is
+  generated based on that information. Note that not all image viewers
+  interpret this setting, and even fewer support non-square pixels.
 }
 %\references{
 %}
-%\author{
-%}
+\author{
+  Simon Urbanek
+}
 \note{
   Currently \code{writePNG} only produces 8-bit, deflate-compressed,
   non-quantized, non-interlaced images. Note in particular that
