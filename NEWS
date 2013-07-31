@@ -1,5 +1,11 @@
 NEWS/Changelog
 
+0.1-6	(under development)
+    o	add support for text tags as well as R object metadata
+	which is serialized into the text field
+	(Thanks to Duncan Temple Lang for the idea)
+
+
 0.1-5	2013-06-03
     o	add dpi and asp to writePNG() which allows to store the
 	image resolution or aspect ratio (via the sPHYs PNG tag).

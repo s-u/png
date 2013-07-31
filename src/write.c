@@ -67,7 +67,7 @@ static void free_fn(png_structp png_ptr, png_voidp ptr) {
 
 #define RX_swap32(X) (X) = (((unsigned int)X) >> 24) | ((((unsigned int)X) >> 8) & 0xff00) | (((unsigned int)X) << 24) | ((((unsigned int)X) & 0xff00) << 8)
 
-SEXP write_png(SEXP image, SEXP sFn, SEXP sDPI, SEXP sAsp) {
+SEXP write_png(SEXP image, SEXP sFn, SEXP sDPI, SEXP sAsp, SEXP sText) {
     SEXP res = R_NilValue, dims;
     const char *fn;
     int planes = 1, width, height, native = 0, raw_array = 0, use_dpi = 0;
@@ -193,6 +193,20 @@ SEXP write_png(SEXP image, SEXP sFn, SEXP sDPI, SEXP sAsp) {
 #else
     if (use_dpi) Rf_warning("pHYs is unsupported in your build of libpng, cannot set dpi/asp");
 #endif
+
+    if (TYPEOF(sText) == STRSXP && LENGTH(sText)) {
+	SEXP nam = getAttrib(sText, R_NamesSymbol);
+	int i, n = LENGTH(sText);
+	{
+	    png_text text_ptr[n]; /* text_ptr can be transient but the char* pointers must be valid until info is written! */
+	    for (i = 0; i < n; i++) {
+		text_ptr[i].compression = PNG_TEXT_COMPRESSION_NONE;
+		text_ptr[i].key = (char*) ((nam == R_NilValue || i >= LENGTH(nam)) ? "" : CHAR(STRING_ELT(nam, i)));
+		text_ptr[i].text = (char*) CHAR(STRING_ELT(sText, i));
+	    }
+	    png_set_text(png_ptr, info_ptr, text_ptr, n);
+	}
+    }
 
     {
 	int rowbytes = width * planes, i;

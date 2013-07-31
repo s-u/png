@@ -118,7 +118,8 @@ SEXP read_png(SEXP sFn, SEXP sNative, SEXP sInfo) {
 	    SEXP dv;
 	    double d;
 	    png_uint_32 rx, ry;
-	    int ut;
+	    int ut, num_text = 0;
+	    png_textp text_ptr;
 
 	    info_tail = info_list = PROTECT(CONS((dv = allocVector(INTSXP, 2)), R_NilValue));
 	    INTEGER(dv)[0] = (int) width;
@@ -143,6 +144,19 @@ SEXP read_png(SEXP sFn, SEXP sNative, SEXP sInfo) {
 		    add_info("dpi", dv);
 		} else if (ut == PNG_RESOLUTION_UNKNOWN)
 		    add_info("asp", ScalarReal(rx / ry));
+	    }
+	    if (png_get_text(png_ptr, info_ptr, &text_ptr, &num_text)) {
+		SEXP txt_key, txt_val = PROTECT(allocVector(STRSXP, num_text));
+		if (num_text) {
+		    int i;
+		    setAttrib(txt_val, R_NamesSymbol, txt_key = allocVector(STRSXP, num_text));
+		    for (i = 0; i < num_text; i++) {
+			SET_STRING_ELT(txt_val, i, text_ptr[i].text ? mkChar(text_ptr[i].text) : NA_STRING);
+			SET_STRING_ELT(txt_key, i, text_ptr[i].key ? mkChar(text_ptr[i].key) : NA_STRING);
+		    }
+		}
+		add_info("text", txt_val);
+		UNPROTECT(1);
 	    }
 #endif
 	}

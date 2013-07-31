@@ -17,7 +17,9 @@ readPNG(source, native = FALSE, info = FALSE)
   result is a native raster representation.}
   \item{info}{logical, if \code{TRUE} additional \code{"info"} attribute
     is attached to the result containing information from optional tags
-    in the file (such as bit depth, resolution, gamma etc.)}
+    in the file (such as bit depth, resolution, gamma, text etc.). If
+    the PNG file contains R metadata, it will also contain a
+    \code{"metadata"} attribute with the unserialized R object.}
 }
 %\details{
 %}

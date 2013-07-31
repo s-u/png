@@ -7,7 +7,8 @@ Write a bitmap image in PNG format
 Create a PNG image from an array or matrix.
 }
 \usage{
-writePNG(image, target = raw(), dpi = NULL, asp = NULL)
+writePNG(image, target = raw(), dpi = NULL, asp = NULL,
+         text = NULL, metadata = NULL)
 }
 \arguments{
   \item{image}{image represented by a real matrix or array with values
@@ -26,6 +27,12 @@ writePNG(image, target = raw(), dpi = NULL, asp = NULL)
   \item{asp}{optional, if set, must be a numeric scalar specifying the
     aspect ratio (\code{x / y}). \code{dpi} and \code{asp} are mututally
     exclusive, speciyfing both is an error.}
+  \item{text}{optional, named character vector of entries that will be
+    saved in the text chunk of the PNG. Names are used as keys. Note
+    that the \code{"R.metadata"} key is reserved for internal use - see
+    below}
+  \item{metadata}{optional, an R object that will be serialized
+    into the \code{"R.metadata"} text key}
 }
 \value{
   Either \code{NULL} if the target is a file or a raw vector containing
@@ -87,5 +94,12 @@ img3 <- readPNG(system.file("img","Rlogo.png",package="png"), TRUE)
 r2 <- writePNG(img3)
 img4 <- readPNG(r2, TRUE)
 identical(img3, img4)
+
+## text and metadata
+r <- writePNG(img, text=c(source=R.version.string),
+     metadata=sessionInfo())
+img5 <- readPNG(r, info=TRUE)
+attr(img5, "info")
+attr(img5, "metadata")
 }
 \keyword{IO}
