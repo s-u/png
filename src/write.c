@@ -65,7 +65,7 @@ static void free_fn(png_structp png_ptr, png_voidp ptr) {
 }
 #endif
 
-#define RX_swap32(X) (X) = (((unsigned int)X) >> 24) | ((((unsigned int)X) >> 8) & 0xff00) | (((unsigned int)X) << 24) | ((((unsigned int)X) & 0xff00) << 8)
+#define RX_swap32(X) (X) = (((unsigned int)(X)) >> 24) | ((((unsigned int)(X)) >> 8) & 0xff00) | (((unsigned int)(X)) << 24) | ((((unsigned int)(X)) & 0xff00) << 8)
 
 SEXP write_png(SEXP image, SEXP sFn, SEXP sDPI, SEXP sAsp, SEXP sText) {
     SEXP res = R_NilValue, dims;
@@ -231,7 +231,7 @@ SEXP write_png(SEXP image, SEXP sFn, SEXP sDPI, SEXP sAsp, SEXP sText) {
 		    }
 	} else {
 	    if (planes == 4) { /* 4 planes - efficient - just copy it all */
-	      int y, *idata = raw_array ? ((int*) RAW(image)) : INTEGER(image), need_swap = 0;
+		int y, *idata = raw_array ? ((int*) RAW(image)) : INTEGER(image), need_swap = 0;
 		for (y = 0; y < height; idata += width, y++)
 		    memcpy(row_pointers[y], idata, width * sizeof(int));
 		
@@ -249,9 +249,9 @@ SEXP write_png(SEXP image, SEXP sFn, SEXP sDPI, SEXP sAsp, SEXP sText) {
 		need_swap = 1;
 #endif
 		if (need_swap) {
-		    int *ide = idata;
-		    for (; idata < ide; idata++)
-			RX_swap32(*idata);
+		    int *idp = (int*) flat_rows, *ide = idp + (height * width * planes);
+		    for (; idp < ide; idp++)
+			RX_swap32(*idp);
 		}
 	    } else if (planes == 3) { /* RGB */
 		int x, y, *idata = INTEGER(res);

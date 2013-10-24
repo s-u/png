@@ -1,5 +1,9 @@
 NEWS/Changelog
 
+0.1-7	(under development)
+    o	fix endianness issue in writePNG() on big-endian machines
+	when using nativeRaster
+
 0.1-6	2013-07-02
     o	add support for text tags as well as R object metadata
 	which is serialized into the text field
