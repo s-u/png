@@ -249,7 +249,7 @@ SEXP write_png(SEXP image, SEXP sFn, SEXP sDPI, SEXP sAsp, SEXP sText) {
 		need_swap = 1;
 #endif
 		if (need_swap) {
-		    int *idp = (int*) flat_rows, *ide = idp + (height * width * planes);
+		    unsigned int *idp = (unsigned int*) flat_rows, *ide = idp + (height * width);
 		    for (; idp < ide; idp++)
 			RX_swap32(*idp);
 		}
