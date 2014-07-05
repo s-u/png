@@ -17,7 +17,7 @@ writePNG(image, target = raw(), dpi = NULL, asp = NULL,
     matrix) or three dimensional array (third dimension specifying the
     plane) and must have either one (grayscale), two (grayscale +
     alpha), three (RGB) or four (RGB + alpha) planes. (For alternative
-    image specifications see deatils)}
+    image specifications see details)}
   \item{target}{Either name of the file to write, a binary connection or
     a raw vector (\code{raw()} - the default - is good enough)
     indicating that the output should be a raw vector.}
@@ -25,7 +25,7 @@ writePNG(image, target = raw(), dpi = NULL, asp = NULL,
     specifying the resolution of the image in DPI (dots per inch) for x
     and y (in that order) - it is recycled to length 2.}
   \item{asp}{optional, if set, must be a numeric scalar specifying the
-    aspect ratio (\code{x / y}). \code{dpi} and \code{asp} are mututally
+    aspect ratio (\code{x / y}). \code{dpi} and \code{asp} are mutually
     exclusive, speciyfing both is an error.}
   \item{text}{optional, named character vector of entries that will be
     saved in the text chunk of the PNG. Names are used as keys. Note
