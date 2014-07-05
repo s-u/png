@@ -1,5 +1,7 @@
 NEWS/Changelog
 
+0.1-8	(under development)
+
 0.1-7	2013-12-03
     o	fix endianness issue in writePNG() on big-endian machines
 	when using nativeRaster
