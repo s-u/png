@@ -287,7 +287,10 @@ SEXP read_png(SEXP sFn, SEXP sNative, SEXP sInfo) {
 	    INTEGER(dim)[1] = width;
 	    setAttrib(res, R_DimSymbol, dim);
 	    setAttrib(res, R_ClassSymbol, mkString("nativeRaster"));
-	    setAttrib(res, install("channels"), ScalarInteger(pln));
+	    {
+		SEXP chsym = install("channels");
+		setAttrib(res, chsym, ScalarInteger(pln));
+	    }
 	    UNPROTECT(1);
 	} else {
 	    int x, y, p, pln = rowbytes / width, pls = width * height;
