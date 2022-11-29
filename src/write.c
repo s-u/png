@@ -71,6 +71,7 @@ SEXP write_png(SEXP image, SEXP sFn, SEXP sDPI, SEXP sAsp, SEXP sText) {
     SEXP res = R_NilValue, dims;
     const char *fn;
     int planes = 1, width, height, native = 0, raw_array = 0, use_dpi = 0;
+    int nprot = 0;
     double dpi_x = 0, dpi_y = 0;
     FILE *f;
     write_job_t rj;
@@ -149,6 +150,7 @@ SEXP write_png(SEXP image, SEXP sFn, SEXP sDPI, SEXP sAsp, SEXP sText) {
     if (TYPEOF(sFn) == RAWSXP) {
 	SEXP rv = allocVector(RAWSXP, INIT_SIZE);
 	rj.rvtail = rj.rvlist = PROTECT(CONS(rv, R_NilValue));
+	nprot++;
 	rj.data = (char*) RAW(rv);
 	rj.len = LENGTH(rv);
 	rj.ptr = 0;
@@ -303,6 +305,6 @@ SEXP write_png(SEXP image, SEXP sFn, SEXP sDPI, SEXP sAsp, SEXP sText) {
 	}
     }
     
-    UNPROTECT(1);
+    UNPROTECT(nprot);
     return res;
 }
