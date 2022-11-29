@@ -1,10 +1,13 @@
 NEWS/Changelog
 
-0.1-8	(under development)
+0.1-8	2022-11-29
+    o	minor change to avoid protect and registration warnings
+
 
 0.1-7	2013-12-03
     o	fix endianness issue in writePNG() on big-endian machines
 	when using nativeRaster
+
 
 0.1-6	2013-07-02
     o	add support for text tags as well as R object metadata
