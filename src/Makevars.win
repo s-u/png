@@ -1,7 +1,13 @@
 ## detect 64-bit Windows
 ifeq ($(strip $(shell $(R_HOME)/bin/R --slave -e 'cat(.Machine$$sizeof.pointer)')),8)
 PKG_CPPFLAGS=-Iwin64
-PKG_LIBS=-Lwin64 -lpng -lz
+
+ifeq (,$(shell pkg-config --version 2>/dev/null))
+  PKG_LIBS=-Lwin64 -lpng -lz
+else
+  PKG_LIBS=$(shell pkg-config --libs libpng)
+endif
+
 else
 PKG_CPPFLAGS=-Iwin32
 PKG_LIBS=-Lwin32 -lpng -lz
