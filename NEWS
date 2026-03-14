@@ -7,6 +7,10 @@ NEWS/Changelog
 	The local toolchain must include libpng (which is the case
 	for all recent versions of Rtools).
 
+    o	the default for text= and metadata= in writePNG() ensures
+	that those are preserved from readPNG() if info=TRUE was
+	used. (#2)
+
 
 0.1-8	2022-11-29
     o	minor change to avoid protect and registration warnings
