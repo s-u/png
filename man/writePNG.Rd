@@ -8,7 +8,8 @@ Create a PNG image from an array or matrix.
 }
 \usage{
 writePNG(image, target = raw(), dpi = NULL, asp = NULL,
-         text = NULL, metadata = NULL)
+         text = attr(image, "info")$text,
+         metadata = attr(image, "info")$metadata)
 }
 \arguments{
   \item{image}{image represented by a real matrix or array with values
@@ -30,7 +31,9 @@ writePNG(image, target = raw(), dpi = NULL, asp = NULL,
   \item{text}{optional, named character vector of entries that will be
     saved in the text chunk of the PNG. Names are used as keys. Note
     that the \code{"R.metadata"} key is reserved for internal use - see
-    below}
+    below. The default value ensures preserving metadata from files
+    that have been read with \code{info=TRUE} and is \code{NULL}
+    otherwise.}
   \item{metadata}{optional, an R object that will be serialized
     into the \code{"R.metadata"} text key}
 }

@@ -1,4 +1,6 @@
-writePNG <- function(image, target = raw(), dpi = NULL, asp = NULL, text = NULL, metadata = NULL) {
+writePNG <- function(image, target = raw(), dpi = NULL, asp = NULL,
+                     text = attr(image, "info")$text,
+                     metadata = attr(image, "info")$metadata) {
   if (!is.null(text) && !is.character(text)) text <- sapply(text, as.character)
   if (!is.null(metadata)) {
     rmd <- rawToChar(serialize(metadata, NULL, TRUE))
