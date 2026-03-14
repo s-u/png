@@ -3,7 +3,7 @@ NEWS/Changelog
 0.1-9	2026-03-15
     o	update DESCRIPTION, use Authors@R, add ORCID
 
-    o	remove old fall-back binaires on Windows. (#8)
+    o	remove old fall-back binaries on Windows. (#8)
 	The local toolchain must include libpng (which is the case
 	for all recent versions of Rtools).
 
