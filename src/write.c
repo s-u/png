@@ -305,6 +305,6 @@ SEXP write_png(SEXP image, SEXP sFn, SEXP sDPI, SEXP sAsp, SEXP sText) {
 	}
     }
     
-    UNPROTECT(nprot);
+    if (nprot) UNPROTECT(nprot);
     return res;
 }
